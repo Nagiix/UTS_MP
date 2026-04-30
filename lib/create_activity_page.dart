@@ -8,11 +8,14 @@ class CreateActivityPage extends StatefulWidget {
 class _CreateActivityPageState extends State<CreateActivityPage> {
   final formKey = GlobalKey<FormState>();
   final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
   final dateController = TextEditingController();
 
   String selectedType = "auth";
+  String selectedPriority = "Sedang";
 
   final List<String> activityTypes = ["auth", "view", "update"];
+  final List<String> priorityOptions = ["Rendah", "Sedang", "Tinggi"];
 
   @override
   void initState() {
@@ -46,8 +49,10 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
     if (formKey.currentState!.validate()) {
       final activity = {
         "title": titleController.text.trim(),
+        "description": descriptionController.text.trim(),
         "date": dateController.text.trim(),
         "type": selectedType,
+        "priority": selectedPriority,
       };
 
       Navigator.pop(context, activity);
@@ -57,6 +62,7 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
   @override
   void dispose() {
     titleController.dispose();
+    descriptionController.dispose();
     dateController.dispose();
     super.dispose();
   }
@@ -110,6 +116,28 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                     },
                   ),
                   SizedBox(height: 16),
+                  TextFormField(
+                    controller: descriptionController,
+                    maxLines: 3,
+                    textInputAction: TextInputAction.newline,
+                    decoration: InputDecoration(
+                      labelText: "Deskripsi",
+                      alignLabelWithHint: true,
+                      prefixIcon: Icon(Icons.notes),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value != null &&
+                          value.trim().isNotEmpty &&
+                          value.trim().length < 5) {
+                        return "Deskripsi minimal 5 karakter";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedType,
                     decoration: InputDecoration(
@@ -129,6 +157,30 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                       if (value != null) {
                         setState(() {
                           selectedType = value;
+                        });
+                      }
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedPriority,
+                    decoration: InputDecoration(
+                      labelText: "Prioritas",
+                      prefixIcon: Icon(Icons.flag),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    items: priorityOptions.map((priority) {
+                      return DropdownMenuItem(
+                        value: priority,
+                        child: Text(priority),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedPriority = value;
                         });
                       }
                     },
@@ -160,6 +212,16 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                     child: ElevatedButton(
                       onPressed: createActivity,
                       child: Text("Create Aktivitas"),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  SizedBox(
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Cancel"),
                     ),
                   ),
                 ],

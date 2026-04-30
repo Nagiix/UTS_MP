@@ -21,10 +21,34 @@ class _DashboardPageState extends State<DashboardPage> {
   String selectedFilter = "Semua";
 
   List<Map<String, String>> activities = [
-    {"title": "Login berhasil", "date": "10 Apr 2026", "type": "auth"},
-    {"title": "Melihat dashboard", "date": "10 Apr 2026", "type": "view"},
-    {"title": "Update profil", "date": "09 Apr 2026", "type": "update"},
-    {"title": "Logout", "date": "09 Apr 2026", "type": "auth"},
+    {
+      "title": "Login berhasil",
+      "description": "Admin masuk ke aplikasi",
+      "date": "10 Apr 2026",
+      "type": "auth",
+      "priority": "Sedang",
+    },
+    {
+      "title": "Melihat dashboard",
+      "description": "User membuka halaman dashboard",
+      "date": "10 Apr 2026",
+      "type": "view",
+      "priority": "Rendah",
+    },
+    {
+      "title": "Update profil",
+      "description": "Data profil user diperbarui",
+      "date": "09 Apr 2026",
+      "type": "update",
+      "priority": "Tinggi",
+    },
+    {
+      "title": "Logout",
+      "description": "User keluar dari aplikasi",
+      "date": "09 Apr 2026",
+      "type": "auth",
+      "priority": "Rendah",
+    },
   ];
 
   void logout(BuildContext context) {
@@ -258,7 +282,17 @@ class _DashboardPageState extends State<DashboardPage> {
                         leading: Icon(Icons.circle,
                             size: 10, color: Colors.blue),
                         title: Text(item["title"]!),
-                        subtitle: Text(item["date"]!),
+                        subtitle: Text(
+                          [
+                            item["description"],
+                            item["date"],
+                            item["type"],
+                            item["priority"],
+                          ]
+                              .where((value) =>
+                                  value != null && value.isNotEmpty)
+                              .join(" - "),
+                        ),
                       ),
                     );
                   },

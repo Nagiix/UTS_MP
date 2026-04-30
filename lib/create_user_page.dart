@@ -195,6 +195,16 @@ class _CreateUserPageState extends State<CreateUserPage> {
                       child: Text("Create User"),
                     ),
                   ),
+                  SizedBox(height: 10),
+                  SizedBox(
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Cancel"),
+                    ),
+                  ),
                 ],
               ),
             ),
