@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'create_user_page.dart';
 import 'login_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -147,10 +148,20 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     SizedBox(width: 10),
                     ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          totalUser++;
-                        });
+                      onPressed: () async {
+                        final isCreated = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CreateUserPage(),
+                          ),
+                        );
+
+                        if (isCreated == true) {
+                          setState(() {
+                            totalUser++;
+                            totalActivity++;
+                          });
+                        }
                       },
                       child: Text("+ User"),
                     ),

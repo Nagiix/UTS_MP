@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'create_user_page.dart';
 import 'forgot_password_page.dart';
 import 'dashboard_page.dart';
 
@@ -162,6 +163,18 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     },
                     child: Text("Lupa password?"),
+                  ),
+
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CreateUserPage(),
+                        ),
+                      );
+                    },
+                    child: Text("Buat user baru"),
                   ),
 
                   SizedBox(height: 20),
