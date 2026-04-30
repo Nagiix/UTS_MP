@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'create_activity_page.dart';
 import 'create_user_page.dart';
 import 'login_page.dart';
 
@@ -58,6 +59,26 @@ class _DashboardPageState extends State<DashboardPage> {
 
       return matchSearch && matchFilter;
     }).toList();
+  }
+
+  void openCreateActivityPage() async {
+    final activity = await Navigator.push<Map<String, String>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateActivityPage(),
+      ),
+    );
+
+    if (activity != null) {
+      setState(() {
+        activities.insert(0, activity);
+        totalActivity++;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Aktivitas berhasil ditambahkan")),
+      );
+    }
   }
 
   Widget statCard(String title, String value, IconData icon) {
@@ -136,7 +157,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 SizedBox(height: 20),
 
                 // BUTTON INTERAKTIF
-                Row(
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
                   children: [
                     ElevatedButton(
                       onPressed: () {
@@ -146,7 +169,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       },
                       child: Text("+ Data"),
                     ),
-                    SizedBox(width: 10),
                     ElevatedButton(
                       onPressed: () async {
                         final isCreated = await Navigator.push<bool>(
@@ -164,6 +186,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         }
                       },
                       child: Text("+ User"),
+                    ),
+                    ElevatedButton(
+                      onPressed: openCreateActivityPage,
+                      child: Text("+ Aktivitas"),
                     ),
                   ],
                 ),
