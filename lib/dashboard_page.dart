@@ -1,0 +1,251 @@
+import 'package:flutter/material.dart';
+import 'login_page.dart';
+
+class DashboardPage extends StatefulWidget {
+  final String username;
+
+  DashboardPage({required this.username});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  int totalData = 120;
+  int totalUser = 5;
+  int totalActivity = 32;
+
+  String searchQuery = "";
+  String selectedFilter = "Semua";
+
+  List<Map<String, String>> activities = [
+    {"title": "Login berhasil", "date": "10 Apr 2026", "type": "auth"},
+    {"title": "Melihat dashboard", "date": "10 Apr 2026", "type": "view"},
+    {"title": "Update profil", "date": "09 Apr 2026", "type": "update"},
+    {"title": "Logout", "date": "09 Apr 2026", "type": "auth"},
+  ];
+
+  void logout(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginPage()),
+      (route) => false,
+    );
+  }
+
+  void refreshData() async {
+    await Future.delayed(Duration(seconds: 1));
+
+    setState(() {
+      totalData += 5;
+      totalActivity += 1;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Data berhasil diperbarui")),
+    );
+  }
+
+  List<Map<String, String>> get filteredActivities {
+    return activities.where((item) {
+      final matchSearch = item["title"]!
+          .toLowerCase()
+          .contains(searchQuery.toLowerCase());
+
+      final matchFilter = selectedFilter == "Semua" ||
+          item["type"] == selectedFilter;
+
+      return matchSearch && matchFilter;
+    }).toList();
+  }
+
+  Widget statCard(String title, String value, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: Colors.blue),
+            SizedBox(height: 10),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(title, style: TextStyle(color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Dashboard Interaktif"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () => logout(context),
+          )
+        ],
+      ),
+
+      body: RefreshIndicator(
+        onRefresh: () async => refreshData(),
+
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                // GREETING
+                Text(
+                  "Halo, ${widget.username} 👋",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                SizedBox(height: 20),
+
+                // STAT CARDS
+                Row(
+                  children: [
+                    statCard("Data", "$totalData", Icons.storage),
+                    SizedBox(width: 10),
+                    statCard("User", "$totalUser", Icons.people),
+                    SizedBox(width: 10),
+                    statCard("Aktivitas", "$totalActivity", Icons.timeline),
+                  ],
+                ),
+
+                SizedBox(height: 20),
+
+                // BUTTON INTERAKTIF
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          totalData++;
+                        });
+                      },
+                      child: Text("+ Data"),
+                    ),
+                    SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          totalUser++;
+                        });
+                      },
+                      child: Text("+ User"),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 20),
+
+                // SEARCH
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: "Cari aktivitas...",
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value;
+                    });
+                  },
+                ),
+
+                SizedBox(height: 10),
+
+                // FILTER CHIPS
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      filterChip("Semua"),
+                      filterChip("auth"),
+                      filterChip("view"),
+                      filterChip("update"),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 20),
+
+                Text(
+                  "Aktivitas",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                SizedBox(height: 10),
+
+                // LIST
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: filteredActivities.length,
+                  itemBuilder: (context, index) {
+                    final item = filteredActivities[index];
+
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 10),
+                      padding: EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: Icon(Icons.circle,
+                            size: 10, color: Colors.blue),
+                        title: Text(item["title"]!),
+                        subtitle: Text(item["date"]!),
+                      ),
+                    );
+                  },
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget filterChip(String label) {
+    return Padding(
+      padding: EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selectedFilter == label,
+        onSelected: (val) {
+          setState(() {
+            selectedFilter = label;
+          });
+        },
+      ),
+    );
+  }
+}
