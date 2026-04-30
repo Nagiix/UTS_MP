@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/activity.dart';
+import '../widgets/priority_badge.dart';
 import 'activity_detail_page.dart';
 import 'create_activity_page.dart';
 import 'create_user_page.dart';
@@ -16,42 +18,14 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int totalData = 120;
   int totalUser = 5;
-  int totalActivity = 32;
+  int totalActivity = Activity.dummyList().length;
 
   String searchQuery = "";
   String selectedFilter = "Semua";
   String selectedPriorityFilter = "Semua";
+  int selectedIndex = 0;
 
-  List<Map<String, String>> activities = [
-    {
-      "title": "Login berhasil",
-      "description": "Admin masuk ke aplikasi",
-      "date": "10 Apr 2026",
-      "type": "auth",
-      "priority": "Sedang",
-    },
-    {
-      "title": "Melihat dashboard",
-      "description": "User membuka halaman dashboard",
-      "date": "10 Apr 2026",
-      "type": "view",
-      "priority": "Rendah",
-    },
-    {
-      "title": "Update profil",
-      "description": "Data profil user diperbarui",
-      "date": "09 Apr 2026",
-      "type": "update",
-      "priority": "Tinggi",
-    },
-    {
-      "title": "Logout",
-      "description": "User keluar dari aplikasi",
-      "date": "09 Apr 2026",
-      "type": "auth",
-      "priority": "Rendah",
-    },
-  ];
+  List<Map<String, String>> activities = Activity.dummyList();
 
   void logout(BuildContext context) {
     Navigator.pushAndRemoveUntil(
@@ -107,16 +81,6 @@ class _DashboardPageState extends State<DashboardPage> {
         SnackBar(content: Text("Aktivitas berhasil ditambahkan")),
       );
     }
-  }
-
-  Color priorityColor(String priority) {
-    if (priority == "Tinggi") {
-      return Colors.red;
-    }
-    if (priority == "Sedang") {
-      return Colors.orange;
-    }
-    return Colors.green;
   }
 
   void openActivityDetail(Map<String, String> activity) async {
@@ -181,29 +145,43 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget statCard(String title, String value, IconData icon) {
     return Expanded(
-      child: Container(
-        padding: EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: Colors.blue),
-            SizedBox(height: 10),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+        child: Padding(
+          padding: EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Icon(icon, color: Colors.blue),
+                ],
               ),
-            ),
-            Text(title, style: TextStyle(color: Colors.grey)),
-          ],
+              SizedBox(height: 10),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(title, style: TextStyle(color: Colors.grey)),
+            ],
+          ),
         ),
-      ),
-    );
+      ));
   }
 
   @override
@@ -219,7 +197,30 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
 
-      body: RefreshIndicator(
+      body: selectedIndex == 0 ? activityTab() : profileTab(),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: selectedIndex,
+        onTap: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: "Dashboard",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Profil",
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget activityTab() {
+    return RefreshIndicator(
         onRefresh: () async => refreshData(),
 
         child: SingleChildScrollView(
@@ -232,7 +233,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
                 // GREETING
                 Text(
-                  "Halo, ${widget.username} 👋",
+                  "Selamat datang, ${widget.username}",
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -380,15 +381,20 @@ class _DashboardPageState extends State<DashboardPage> {
                               item["description"],
                               item["date"],
                               item["type"],
-                              priority,
                             ]
                                 .where((value) =>
                                     value != null && value.isNotEmpty)
                                 .join(" - "),
                           ),
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => confirmDeleteActivity(item),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              PriorityBadge(priority: priority),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => confirmDeleteActivity(item),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -398,8 +404,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget filterChip(String label) {
@@ -430,6 +435,88 @@ class _DashboardPageState extends State<DashboardPage> {
         },
       ),
     );
+  }
+
+  Widget profileTab() {
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.12),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Icon(Icons.person, size: 40, color: Colors.blue),
+                        ],
+                      ),
+                      SizedBox(height: 14),
+                      Text(
+                        widget.username.isEmpty
+                            ? "User"
+                            : widget.username,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        "Akun aktif",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  statCard("Data", "$totalData", Icons.storage),
+                  SizedBox(width: 10),
+                  statCard("User", "$totalUser", Icons.people),
+                ],
+              ),
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  statCard("Aktivitas", "$totalActivity", Icons.timeline),
+                  SizedBox(width: 10),
+                  statCard("Filter", selectedPriorityFilter, Icons.filter_alt),
+                ],
+              ),
+              SizedBox(height: 16),
+              SizedBox(
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: () => logout(context),
+                  icon: Icon(Icons.logout),
+                  label: Text("Logout"),
+                ),
+              ),
+            ],
+          ),
+        ),
+    ));
   }
 
   Widget emptyState() {

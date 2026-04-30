@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../utils/app_routes.dart';
+import '../utils/validators.dart';
 import 'create_user_page.dart';
-import 'forgot_password_page.dart';
 import 'dashboard_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -15,18 +16,28 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
 
   bool isObscure = true;
+  bool isLoading = false;
+  String errorMessage = "";
 
-  bool isValidEmail(String email) {
-    return RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
-        .hasMatch(email);
-  }
-
-  void login() {
+  void login() async {
     FocusScope.of(context).unfocus(); // tutup keyboard
 
     if (formKey.currentState!.validate()) {
-      if (emailController.text == "admin@gmail.com" &&
-          passwordController.text == "1234") {
+      setState(() {
+        isLoading = true;
+        errorMessage = "";
+      });
+
+      await Future.delayed(Duration(seconds: 1));
+
+      if (emailController.text == "admin@test.com" &&
+          passwordController.text == "Admin123") {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Login berhasil")),
+        );
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -35,9 +46,19 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       } else {
+        setState(() {
+          errorMessage = "Email atau password salah";
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Email atau password salah")),
+          SnackBar(content: Text(errorMessage)),
         );
+      }
+
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
       }
     }
   }
@@ -90,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
                       if (value == null || value.isEmpty) {
                         return "Email wajib diisi";
                       }
-                      if (!isValidEmail(value)) {
+                      if (!Validators.isValidEmail(value)) {
                         return "Format email tidak valid";
                       }
                       return null;
@@ -129,6 +150,9 @@ class _LoginPageState extends State<LoginPage> {
                       if (value == null || value.isEmpty) {
                         return "Password wajib diisi";
                       }
+                      if (!Validators.isStrongPassword(value)) {
+                        return "Password minimal 8 karakter, huruf, dan angka";
+                      }
                       return null;
                     },
 
@@ -140,12 +164,31 @@ class _LoginPageState extends State<LoginPage> {
 
                   SizedBox(height: 24),
 
+                  if (errorMessage.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        errorMessage,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+
                   // LOGIN BUTTON
                   SizedBox(
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: login,
-                      child: Text("Login"),
+                      onPressed: isLoading ? null : login,
+                      child: isLoading
+                          ? SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text("Login"),
                     ),
                   ),
 
@@ -154,12 +197,9 @@ class _LoginPageState extends State<LoginPage> {
                   // FORGOT PASSWORD
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
+                      Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ForgotPasswordPage(),
-                        ),
+                        AppRoutes.forgotPassword,
                       );
                     },
                     child: Text("Lupa password?"),
@@ -180,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20),
 
                   Text(
-                    "admin@gmail.com / 1234",
+                    "admin@test.com / Admin123",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,

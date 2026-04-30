@@ -1,20 +1,11 @@
 import 'package:flutter/material.dart';
+import '../widgets/priority_badge.dart';
 import 'create_activity_page.dart';
 
 class ActivityDetailPage extends StatelessWidget {
   final Map<String, String> activity;
 
   ActivityDetailPage({required this.activity});
-
-  Color priorityColor(String priority) {
-    if (priority == "Tinggi") {
-      return Colors.red;
-    }
-    if (priority == "Sedang") {
-      return Colors.orange;
-    }
-    return Colors.green;
-  }
 
   Widget detailRow(String label, String value) {
     return Padding(
@@ -94,23 +85,7 @@ class ActivityDetailPage extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 10),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          priority,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      PriorityBadge(priority: priority),
                     ],
                   ),
                 ),

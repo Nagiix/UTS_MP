@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:aplikasiuts/dashboard_page.dart';
+import 'package:aplikasiuts/screens/dashboard_page.dart';
 import 'package:aplikasiuts/main.dart';
 
 void main() {
@@ -59,9 +59,28 @@ void main() {
 
     expect(find.text('Login berhasil'), findsOneWidget);
     expect(
-      find.text('Admin masuk ke aplikasi - 10 Apr 2026 - auth - Sedang'),
+      find.text('Admin masuk ke aplikasi - 10 Apr 2026 - auth'),
       findsOneWidget,
     );
+    expect(find.text('Sedang'), findsWidgets);
+  });
+
+  testWidgets('bottom navigation opens profile tab',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(username: "admin@test.com"),
+      ),
+    );
+
+    expect(find.text('Dashboard'), findsOneWidget);
+    expect(find.text('Profil'), findsOneWidget);
+
+    await tester.tap(find.text('Profil'));
+    await tester.pump();
+
+    expect(find.text('admin@test.com'), findsOneWidget);
+    expect(find.text('Akun aktif'), findsOneWidget);
   });
 
   testWidgets('opens detail and edits an activity',
@@ -102,7 +121,7 @@ void main() {
     );
 
     await tester.enterText(find.byType(TextField), 'Tidak ada data');
-    await tester.tap(find.text('Tinggi'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Tinggi'));
     await tester.pump();
 
     expect(find.text('Tidak ada aktivitas ditemukan'), findsOneWidget);
