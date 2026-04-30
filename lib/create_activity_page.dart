@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 class CreateActivityPage extends StatefulWidget {
+  final Map<String, String>? activity;
+
+  CreateActivityPage({this.activity});
+
   @override
   State<CreateActivityPage> createState() => _CreateActivityPageState();
 }
@@ -20,7 +24,18 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
   @override
   void initState() {
     super.initState();
-    dateController.text = formatDate(DateTime.now());
+    final activity = widget.activity;
+
+    if (activity == null) {
+      dateController.text = formatDate(DateTime.now());
+      return;
+    }
+
+    titleController.text = activity["title"] ?? "";
+    descriptionController.text = activity["description"] ?? "";
+    dateController.text = activity["date"] ?? formatDate(DateTime.now());
+    selectedType = activity["type"] ?? selectedType;
+    selectedPriority = activity["priority"] ?? selectedPriority;
   }
 
   String formatDate(DateTime date) {
@@ -43,7 +58,7 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
     return "$day ${months[date.month - 1]} ${date.year}";
   }
 
-  void createActivity() {
+  void saveActivity() {
     FocusScope.of(context).unfocus();
 
     if (formKey.currentState!.validate()) {
@@ -70,7 +85,11 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Create Aktivitas")),
+      appBar: AppBar(
+        title: Text(
+          widget.activity == null ? "Create Aktivitas" : "Edit Aktivitas",
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -81,7 +100,9 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    "Tambah aktivitas",
+                    widget.activity == null
+                        ? "Tambah aktivitas"
+                        : "Edit aktivitas",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 26,
@@ -90,7 +111,9 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    "Aktivitas baru akan masuk ke daftar dashboard",
+                    widget.activity == null
+                        ? "Aktivitas baru akan masuk ke daftar dashboard"
+                        : "Perbarui data aktivitas",
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey),
                   ),
@@ -203,15 +226,19 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                       return null;
                     },
                     onFieldSubmitted: (_) {
-                      createActivity();
+                      saveActivity();
                     },
                   ),
                   SizedBox(height: 24),
                   SizedBox(
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: createActivity,
-                      child: Text("Create Aktivitas"),
+                      onPressed: saveActivity,
+                      child: Text(
+                        widget.activity == null
+                            ? "Create Aktivitas"
+                            : "Update Aktivitas",
+                      ),
                     ),
                   ),
                   SizedBox(height: 10),

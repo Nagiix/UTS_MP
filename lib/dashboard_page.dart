@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'activity_detail_page.dart';
 import 'create_activity_page.dart';
 import 'create_user_page.dart';
 import 'login_page.dart';
@@ -19,6 +20,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   String searchQuery = "";
   String selectedFilter = "Semua";
+  String selectedPriorityFilter = "Semua";
 
   List<Map<String, String>> activities = [
     {
@@ -80,8 +82,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
       final matchFilter = selectedFilter == "Semua" ||
           item["type"] == selectedFilter;
+      final matchPriority = selectedPriorityFilter == "Semua" ||
+          item["priority"] == selectedPriorityFilter;
 
-      return matchSearch && matchFilter;
+      return matchSearch && matchFilter && matchPriority;
     }).toList();
   }
 
@@ -103,6 +107,76 @@ class _DashboardPageState extends State<DashboardPage> {
         SnackBar(content: Text("Aktivitas berhasil ditambahkan")),
       );
     }
+  }
+
+  Color priorityColor(String priority) {
+    if (priority == "Tinggi") {
+      return Colors.red;
+    }
+    if (priority == "Sedang") {
+      return Colors.orange;
+    }
+    return Colors.green;
+  }
+
+  void openActivityDetail(Map<String, String> activity) async {
+    final index = activities.indexOf(activity);
+
+    final updatedActivity = await Navigator.push<Map<String, String>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ActivityDetailPage(activity: activity),
+      ),
+    );
+
+    if (updatedActivity != null && index != -1) {
+      setState(() {
+        activities[index] = updatedActivity;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Aktivitas berhasil diperbarui")),
+      );
+    }
+  }
+
+  void confirmDeleteActivity(Map<String, String> activity) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text("Hapus aktivitas?"),
+          content: Text(
+            "Aktivitas \"${activity["title"]}\" akan dihapus dari daftar.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                setState(() {
+                  activities.remove(activity);
+                  totalActivity--;
+                });
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Aktivitas berhasil dihapus")),
+                );
+              },
+              child: Text(
+                "Delete",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget statCard(String title, String value, IconData icon) {
@@ -251,6 +325,20 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
 
+                SizedBox(height: 10),
+
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      priorityFilterChip("Semua"),
+                      priorityFilterChip("Rendah"),
+                      priorityFilterChip("Sedang"),
+                      priorityFilterChip("Tinggi"),
+                    ],
+                  ),
+                ),
+
                 SizedBox(height: 20),
 
                 Text(
@@ -263,40 +351,49 @@ class _DashboardPageState extends State<DashboardPage> {
 
                 SizedBox(height: 10),
 
-                // LIST
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: filteredActivities.length,
-                  itemBuilder: (context, index) {
-                    final item = filteredActivities[index];
+                if (filteredActivities.isEmpty)
+                  emptyState()
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: filteredActivities.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredActivities[index];
+                      final priority = item["priority"] ?? "Rendah";
+                      final color = priorityColor(priority);
 
-                    return Container(
-                      margin: EdgeInsets.only(bottom: 10),
-                      padding: EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        leading: Icon(Icons.circle,
-                            size: 10, color: Colors.blue),
-                        title: Text(item["title"]!),
-                        subtitle: Text(
-                          [
-                            item["description"],
-                            item["date"],
-                            item["type"],
-                            item["priority"],
-                          ]
-                              .where((value) =>
-                                  value != null && value.isNotEmpty)
-                              .join(" - "),
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 10),
+                        padding: EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.10),
+                          border: Border.all(color: color.withOpacity(0.45)),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                    );
-                  },
-                )
+                        child: ListTile(
+                          onTap: () => openActivityDetail(item),
+                          leading: Icon(Icons.circle, size: 10, color: color),
+                          title: Text(item["title"]!),
+                          subtitle: Text(
+                            [
+                              item["description"],
+                              item["date"],
+                              item["type"],
+                              priority,
+                            ]
+                                .where((value) =>
+                                    value != null && value.isNotEmpty)
+                                .join(" - "),
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => confirmDeleteActivity(item),
+                          ),
+                        ),
+                      );
+                    },
+                  )
               ],
             ),
           ),
@@ -316,6 +413,52 @@ class _DashboardPageState extends State<DashboardPage> {
             selectedFilter = label;
           });
         },
+      ),
+    );
+  }
+
+  Widget priorityFilterChip(String label) {
+    return Padding(
+      padding: EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selectedPriorityFilter == label,
+        onSelected: (val) {
+          setState(() {
+            selectedPriorityFilter = label;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget emptyState() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.search_off, size: 42, color: Colors.grey),
+          SizedBox(height: 10),
+          Text(
+            "Tidak ada aktivitas ditemukan",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            "Coba ubah kata kunci atau filter.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
       ),
     );
   }

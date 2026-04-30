@@ -64,6 +64,70 @@ void main() {
     );
   });
 
+  testWidgets('opens detail and edits an activity',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(username: "admin@gmail.com"),
+      ),
+    );
+
+    await tester.tap(find.text('Login berhasil'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detail Aktivitas'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.edit).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit Aktivitas'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Judul Aktivitas'),
+      'Login admin berhasil',
+    );
+    await tester.tap(find.text('Update Aktivitas'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Login admin berhasil'), findsOneWidget);
+    expect(find.text('Aktivitas berhasil diperbarui'), findsOneWidget);
+  });
+
+  testWidgets('filters by priority and shows empty state',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(username: "admin@gmail.com"),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'Tidak ada data');
+    await tester.tap(find.text('Tinggi'));
+    await tester.pump();
+
+    expect(find.text('Tidak ada aktivitas ditemukan'), findsOneWidget);
+  });
+
+  testWidgets('deletes activity after confirmation',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DashboardPage(username: "admin@gmail.com"),
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.delete).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hapus aktivitas?'), findsOneWidget);
+
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Login berhasil'), findsNothing);
+    expect(find.text('Aktivitas berhasil dihapus'), findsOneWidget);
+  });
+
   testWidgets('cancel activity creation returns to dashboard',
       (WidgetTester tester) async {
     await tester.pumpWidget(
